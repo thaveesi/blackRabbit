@@ -233,3 +233,40 @@ def orchestrate_exploit(w3, private_key, contract_address, abi, steps):
         signed_txn = w3.eth.account.signTransaction(txn, private_key=private_key)
         txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
         print(f"Executed step: {function_name}, Txn hash: {txn_hash.hex()}")
+
+# Generic smart contract function call
+def call_contract_function(w3, private_key, contract_address, abi, function_name, *args, value=0):
+    account = w3.eth.account.privateKeyToAccount(private_key)
+    contract = w3.eth.contract(address=Web3.toChecksumAddress(contract_address), abi=abi)
+    function = getattr(contract.functions, function_name)
+
+    txn = function(*args).buildTransaction({
+        'chainId': 11155111,  # Sepolia Chain ID
+        'from': account.address,
+        'nonce': w3.eth.getTransactionCount(account.address),
+        'gas': 2000000,
+        'gasPrice': w3.eth.gas_price,
+        'value': value,  # If ETH is required
+    })
+
+    signed_txn = w3.eth.account.signTransaction(txn, private_key=private_key)
+    txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+
+    return txn_hash.hex()
+
+def read_contract_function(w3, contract_address, abi, function_name, *args):
+    contract = w3.eth.contract(address=Web3.toChecksumAddress(contract_address), abi=abi)
+    function = getattr(contract.functions, function_name)
+    result = function(*args).call()
+    return result
+
+def retry_transaction(w3, private_key, contract_address, abi, function_name, *args, value=0, retries=3):
+    for attempt in range(retries):
+        try:
+            txn_hash = call_contract_function(w3, private_key, contract_address, abi, function_name, *args, value=value)
+            return txn_hash  # Return successful transaction hash
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {str(e)}")
+            continue
+    raise RuntimeError("All retry attempts failed")
+
