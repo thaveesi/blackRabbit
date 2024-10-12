@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
 import Contracts from './components/Contracts'
 import './App.css'
+import Reports from './components/Reports'
 
 function App() {
   return (
@@ -28,8 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/contracts" element={<Contracts />} />
-          {/* <Route path="/reports" element={<Reports />} /> */}
-          {/* Add routes for Help and Settings if needed */}
+          <Route path="/reports" element={<Reports />} />
         </Routes>
       </main>
     </div>

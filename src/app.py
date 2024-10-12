@@ -3,17 +3,18 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime
 import requests
+import os
 from dotenv import load_dotenv
 import os
 import json
 from bson import ObjectId  # Import ObjectId
+from schema import get_all_reports
 
-load_dotenv()
+load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
-
 # Enable CORS
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+CORS(app)
 
 # MongoDB connection
 MONGO_URI = os.getenv("MONGO_URI")
@@ -100,6 +101,17 @@ def create_contract():
 
     new_contract = convert_objectid(new_contract)  # Convert ObjectIds to strings before returning
     return jsonify({"message": "Contract created successfully", "contract": new_contract}), 201
+
+# Route 4: GET /reports
+@app.route('/reports', methods=['GET'])
+def get_reports():
+    try:
+        # Fetch all reports from the database
+        all_reports = get_all_reports()
+        return jsonify(all_reports), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
