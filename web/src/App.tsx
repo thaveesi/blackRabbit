@@ -11,7 +11,7 @@ function App() {
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md">
         <div className="p-4">
-          <Link to="/" className="text-2xl font-bold text-blue-600">G</Link>
+          <Link to="/" className="text-2xl font-bold text-blue-600">MAS</Link>
         </div>
         <nav className="mt-8">
           <Link to="/" className="block py-2 px-4 text-gray-600 hover:bg-gray-200">Dashboard</Link>
