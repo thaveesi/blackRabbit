@@ -66,6 +66,9 @@ eth-utils==5.0.0
     # via web3
 flask==3.0.3
     # via api
+    # via flask-cors
+flask-cors==5.0.0
+    # via api
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
@@ -99,11 +102,8 @@ pydantic==2.9.2
     # via web3
 pydantic-core==2.23.4
     # via pydantic
-<<<<<<< Updated upstream
-=======
 pymongo==4.10.1
     # via api
->>>>>>> Stashed changes
 python-dotenv==1.0.1
     # via api
 pyunormalize==16.0.0

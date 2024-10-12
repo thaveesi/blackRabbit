@@ -1,30 +1,45 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
+import os
+import json
+from bson import ObjectId  # Import ObjectId
 
-load_dotenv()  # Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
-# MongoDB connection
-MONGO_URI = os.getenv("MONGO_URI")  # Get MongoDB URI from .env
+# Enable CORS
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
+# MongoDB connection
+MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client.mydatabase
 
 # Etherscan API details
-ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")  # Get Etherscan API key from .env
-ETHERSCAN_BASE_URL = "https://api.etherscan.io/api"
+ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
+ETHERSCAN_BASE_URL = "https://api-sepolia.etherscan.io/api"
+
+# Helper function to convert ObjectId to string
+def convert_objectid(data):
+    if isinstance(data, list):
+        return [convert_objectid(item) for item in data]
+    if isinstance(data, dict):
+        return {key: convert_objectid(value) for key, value in data.items()}
+    if isinstance(data, ObjectId):
+        return str(data)
+    return data
 
 # Route 1: GET /contracts/recent
 @app.route('/contracts/recent', methods=['GET'])
 def get_recent_contracts():
     # Retrieve the 5 most recent smart contracts
     recent_contracts = list(db.smart_contract.find().sort("created_at", -1).limit(5))
-    for contract in recent_contracts:
-        contract['_id'] = str(contract['_id'])  # Convert ObjectId to string for JSON compatibility
+    recent_contracts = convert_objectid(recent_contracts)  # Convert ObjectIds to strings
     return jsonify(recent_contracts), 200
 
 # Route 2: GET /contracts/<cid>
@@ -33,10 +48,12 @@ def get_contract_by_id(cid):
     # Find the contract by contract_id
     contract = db.smart_contract.find_one({"contract_id": cid})
     if contract:
-        contract['_id'] = str(contract['_id'])  # Convert ObjectId to string for JSON compatibility
+        contract = convert_objectid(contract)  # Convert ObjectIds to strings
         # Fetch related events and reports for the contract
         events = list(db.events.find({"smart_contract_id": cid}))
         reports = list(db.report.find({"contract_id": cid}))
+        events = convert_objectid(events)
+        reports = convert_objectid(reports)
         return jsonify({
             "contract_info": contract,
             "events": events,
@@ -63,16 +80,25 @@ def create_contract():
     if abi_data.get("status") != "1":
         return jsonify({"error": "Unable to fetch ABI"}), 400
 
+    # Parse the ABI JSON string into a Python list
+    try:
+        abi_parsed = json.loads(abi_data.get("result"))
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to parse ABI"}), 400
+    
+    print(abi_data)
+
     # Insert contract details into the smart_contract collection
     new_contract = {
         "contract_id": f"contract_{int(datetime.timestamp(datetime.now()))}",
         "name": name,
         "addr": address,
-        "source_code": abi_data.get("result"),  # Storing the ABI
+        "source_code": abi_parsed,  # Store the parsed ABI list
         "created_at": datetime.now()
     }
     db.smart_contract.insert_one(new_contract)
 
+    new_contract = convert_objectid(new_contract)  # Convert ObjectIds to strings before returning
     return jsonify({"message": "Contract created successfully", "contract": new_contract}), 201
 
 if __name__ == '__main__':
