@@ -86,15 +86,23 @@ def create_contract():
         abi_parsed = json.loads(abi_data.get("result"))
     except json.JSONDecodeError:
         return jsonify({"error": "Failed to parse ABI"}), 400
-    
-    print(abi_data)
+
+    # Fetch the contract source code from Etherscan
+    sourcecode_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}")
+    sourcecode_data = sourcecode_response.json()
+
+    if sourcecode_data.get("status") != "1":
+        return jsonify({"error": "Unable to fetch source code"}), 400
+
+    source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
 
     # Insert contract details into the smart_contract collection
     new_contract = {
         "contract_id": f"contract_{int(datetime.timestamp(datetime.now()))}",
         "name": name,
         "addr": address,
-        "source_code": abi_parsed,  # Store the parsed ABI list
+        "abi": abi_parsed,  # Store the parsed ABI list
+        "source_code": source_code_result,  # Store the verified source code
         "created_at": datetime.now()
     }
     db.smart_contract.insert_one(new_contract)

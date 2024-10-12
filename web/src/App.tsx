@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
 import Contracts from './components/Contracts'
+import ContractDetails from './components/ContractDetails'
 import './App.css'
 import Reports from './components/Reports'
 
@@ -29,7 +30,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/contracts" element={<Contracts />} />
-          <Route path="/reports" element={<Reports />} />
+          <Route path="/contract/:contract_id" element={<ContractDetails />} /> {/* Dynamic Route */}
+          {/* <Route path="/reports" element={<Reports />} /> */}
+          {/* Add routes for Help and Settings if needed */}
         </Routes>
       </main>
     </div>

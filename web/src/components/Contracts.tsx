@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const RecentContract = ({ name, status }: { name: string; status: string }) => (
     <div className="bg-white p-4 rounded-lg shadow">
@@ -23,6 +24,7 @@ const Contracts: React.FC = () => {
     const [name, setName] = useState<string>(''); // State for the name input
     const [address, setAddress] = useState<string>(''); // State for the address input
     const [errorMessage, setErrorMessage] = useState<string>(''); // State for error messages (if any)
+    const navigate = useNavigate(); // Initialize navigate
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault(); // Prevent form from reloading the page
@@ -47,6 +49,13 @@ const Contracts: React.FC = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Contract created successfully:', data);
+
+                // Extract contract_id from the response
+                const contractId = data.contract.contract_id;
+
+                // Redirect to the contract details page
+                navigate(`/contract/${contractId}`);
+
                 // Handle success (e.g., show a success message or clear the form)
                 setName(''); // Clear the name field
                 setAddress(''); // Clear the address field
@@ -82,7 +91,7 @@ const Contracts: React.FC = () => {
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Enter contract name"
+                            placeholder="Enter your name"
                             required
                         />
                     </div>
