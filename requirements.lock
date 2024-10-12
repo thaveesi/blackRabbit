@@ -22,14 +22,20 @@ attrs==24.2.0
     # via aiohttp
 bitarray==2.9.3
     # via eth-account
+blinker==1.8.2
+    # via flask
 certifi==2024.8.30
     # via requests
 charset-normalizer==3.4.0
     # via requests
 ckzg==2.0.1
     # via eth-account
+click==8.1.7
+    # via flask
 cytoolz==1.0.0
     # via eth-utils
+dnspython==2.7.0
+    # via pymongo
 eth-abi==5.1.0
     # via eth-account
     # via web3
@@ -58,6 +64,11 @@ eth-utils==5.0.0
     # via eth-rlp
     # via rlp
     # via web3
+flask==3.0.3
+    # via api
+    # via flask-cors
+flask-cors==5.0.0
+    # via api
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
@@ -69,6 +80,13 @@ hexbytes==1.2.1
 idna==3.10
     # via requests
     # via yarl
+itsdangerous==2.2.0
+    # via flask
+jinja2==3.1.4
+    # via flask
+markupsafe==3.0.1
+    # via jinja2
+    # via werkzeug
 multidict==6.1.0
     # via aiohttp
     # via yarl
@@ -84,6 +102,10 @@ pydantic==2.9.2
     # via web3
 pydantic-core==2.23.4
     # via pydantic
+pymongo==4.10.1
+    # via api
+python-dotenv==1.0.1
+    # via api
 pyunormalize==16.0.0
     # via web3
 regex==2024.9.11
@@ -109,5 +131,7 @@ web3==7.3.0
     # via api
 websockets==13.1
     # via web3
+werkzeug==3.0.4
+    # via flask
 yarl==1.15.0
     # via aiohttp

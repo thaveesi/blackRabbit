@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+
+const RecentContract = ({ name, status }: { name: string; status: string }) => (
+    <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="font-semibold">{name}</h3>
+        <span
+            className={`text-sm ${
+                status === 'Successful'
+                    ? 'text-green-500'
+                    : status === 'Issues Found'
+                    ? 'text-red-500'
+                    : status === 'Warnings'
+                    ? 'text-yellow-500'
+                    : ''
+            }`}
+        >
+            {status}
+        </span>
+    </div>
+);
+
+const Contracts: React.FC = () => {
+    const [name, setName] = useState<string>(''); // State for the name input
+    const [address, setAddress] = useState<string>(''); // State for the address input
+    const [errorMessage, setErrorMessage] = useState<string>(''); // State for error messages (if any)
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault(); // Prevent form from reloading the page
+
+        try {
+            // API request payload
+            const payload = {
+                name,
+                address,
+            };
+
+            // Send POST request to the API
+            const response = await fetch('http://127.0.0.1:5000/contracts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            // Check if response is successful
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Contract created successfully:', data);
+                // Handle success (e.g., show a success message or clear the form)
+                setName(''); // Clear the name field
+                setAddress(''); // Clear the address field
+                setErrorMessage(''); // Clear any error messages
+            } else {
+                // Handle failure
+                const errorData = await response.json();
+                setErrorMessage(`Error: ${errorData.message || 'Failed to create contract'}`);
+                console.error('Failed to create contract:', errorData);
+            }
+        } catch (error) {
+            console.error('Error creating contract:', error);
+            setErrorMessage('An error occurred while creating the contract. Please try again.');
+        }
+    };
+
+    return (
+        <div className="p-8">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold">Contracts</h1>
+            </div>
+
+            <h2 className="text-xl font-semibold mb-4">Penetration Test</h2>
+            <div className="flex justify-center items-center min-h-screen bg-gray-100">
+                <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+                    <div className="mb-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                            Name
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter contract name"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+                            Smart Contract Address
+                        </label>
+                        <input
+                            type="text"
+                            id="address"
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="Enter Smart Contract Address"
+                            required
+                        />
+                    </div>
+
+                    {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
+
+                    <div className="flex items-center justify-between">
+                        <button
+                            type="submit"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        >
+                            Run Test
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default Contracts;
