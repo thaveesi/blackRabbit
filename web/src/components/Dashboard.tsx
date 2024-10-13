@@ -11,20 +11,19 @@ const RecentContract = ({ contract, status }: { contract: any; status: string })
 
   return (
     <div
-      className="bg-white p-4 rounded-lg shadow cursor-pointer"
+      className="bg-white cursor-pointer h-20"
       onClick={handleClick}
     >
-      <h3 className="font-semibold">{contract.name}</h3>
+      <h2 className="font-semibold text-xl">{contract.name}</h2>
       <span
-        className={`text-sm ${
-          status === 'Successful'
-            ? 'text-green-500'
-            : status === 'Issues Found'
+        className={`text-sm font-semibold ${status === 'Successful'
+          ? 'text-green-500'
+          : status === 'Issues Found'
             ? 'text-red-500'
             : status === 'Warnings'
-            ? 'text-yellow-500'
-            : ''
-        }`}
+              ? 'text-yellow-500'
+              : ''
+          }`}
       >
         {status}
       </span>
@@ -85,12 +84,12 @@ const Dashboard: React.FC = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-4xl font-bold">Dashboard</h1>
         <div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded mr-2">
+          <button className="bg-blue-600 rounded-xl text-white px-4 py-2 rounded mr-2">
             Connect Wallet
           </button>
-          <button className="bg-gray-800 text-white px-4 py-2 rounded">
+          <button className="bg-gray-800 rounded-xl text-white px-4 py-2 rounded">
             Test New Contract
           </button>
         </div>
@@ -99,13 +98,14 @@ const Dashboard: React.FC = () => {
       <h2 className="text-xl font-semibold mb-4">Recent Contracts</h2>
       <div className="grid grid-cols-5 gap-4 mb-8">
         {contracts.map((contract) => (
-          <RecentContract
-            key={contract.contract_id}
-            contract={contract}
-            status={
-              contract.someStatusField || 'Unknown' // Adjust status field based on your data
-            }
-          />
+          <div key={contract.contract_id} className="border border-gray-300 p-4 rounded-lg">
+            <RecentContract
+              contract={contract}
+              status={
+                contract.someStatusField || 'Unknown' // Adjust status field based on your data
+              }
+            />
+          </div>
         ))}
       </div>
 

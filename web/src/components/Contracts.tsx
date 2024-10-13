@@ -5,15 +5,14 @@ const RecentContract = ({ name, status }: { name: string; status: string }) => (
     <div className="bg-white p-4 rounded-lg">
         <h3 className="font-semibold">{name}</h3>
         <span
-            className={`text-sm ${
-                status === 'Successful'
-                    ? 'text-green-500'
-                    : status === 'Issues Found'
+            className={`text-sm ${status === 'Successful'
+                ? 'text-green-500'
+                : status === 'Issues Found'
                     ? 'text-red-500'
                     : status === 'Warnings'
-                    ? 'text-yellow-500'
-                    : ''
-            }`}
+                        ? 'text-yellow-500'
+                        : ''
+                }`}
         >
             {status}
         </span>
@@ -73,12 +72,12 @@ const Contracts: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex px-16 py-16 my-8 min-h-screen bg-white">
             <div className="w-full max-w-lg">
                 {/* <h1 className="text-3xl font-bold text-center mb-8">Smart Contracts</h1> */}
 
-                <h1 className="text-xl font-semibold mb-4">Penetration Test</h1>
-                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
+                <h1 className="text-3xl font-semibold mb-4">Penetration Test</h1>
+                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg">
                     <div className="mb-6">
                         <label className="block text-gray-800 text-sm font-bold mb-2" htmlFor="name">
                             Name
@@ -86,7 +85,7 @@ const Contracts: React.FC = () => {
                         <input
                             type="text"
                             id="name"
-                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-800 leading-tight focus:outline-none focus:shadow-outline"
+                            className="appearance-none border rounded-xl w-full py-3 px-4 text-gray-800 leading-tight focus:outline-none"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Enter Contract Name"
@@ -101,7 +100,7 @@ const Contracts: React.FC = () => {
                         <input
                             type="text"
                             id="address"
-                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            className="appearance-none border rounded-xl w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             placeholder="Enter Smart Contract Address"
@@ -114,7 +113,7 @@ const Contracts: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <button
                             type="submit"
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline w-full"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 my-6 rounded-xl focus:outline-none focus:shadow-outline w-half"
                         >
                             Run Test
                         </button>
