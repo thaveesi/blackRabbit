@@ -30,19 +30,26 @@ const ContractDetails: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch contract events from MongoDB via an API
+    // Fetch contract events from MongoDB via an API every 3 seconds
     useEffect(() => {
         const fetchContractEvents = async () => {
             try {
                 const response = await axios.get(`http://127.0.0.1:5000/contracts/${contract_id}/events`);
                 setEvents(response.data.events);
-                setLoading(false);
             } catch (err) {
-                setError('Failed to fetch contract events');
-                setLoading(false);
+                console.error('Failed to fetch contract events', err);  // Log the error but don't update state
             }
         };
 
+        // Set interval to call fetchContractEvents every 3 seconds
+        const intervalId = setInterval(fetchContractEvents, 3000);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [contract_id]);
+
+    // Fetch contract data on page load (runs once)
+    useEffect(() => {
         const fetchContractData = async () => {
             try {
                 const response = await fetch(`http://127.0.0.1:5000/contracts/${contract_id}`);
@@ -53,12 +60,11 @@ const ContractDetails: React.FC = () => {
                 setContractData(data);
                 setLoading(false);
             } catch (err) {
-                // setError(err.message);
+                setError('Failed to fetch contract data');
                 setLoading(false);
             }
         };
 
-        fetchContractEvents();
         fetchContractData();
     }, [contract_id]);
 
