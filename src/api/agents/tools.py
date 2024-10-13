@@ -17,26 +17,37 @@ def call_function(w3, contract_address, abi, function_name, *args, from_address=
     result = function(*args).call(call_params)
     return result
 
-def send_transaction(w3, private_key, contract_address, abi, function_name, *args, value=0):
+def send_transaction(w3, private_key, contract_address, abi, function_name, *args, value=0, gas_price=None):
     account = w3.eth.account.from_key(private_key)
     contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=abi)
     function = getattr(contract.functions, function_name)
 
-    # Build the transaction for non-payable functions
+    # Use the default gas price if not provided
+    if gas_price is None:
+        gas_price = w3.eth.gas_price
+
+    # Get the correct nonce
+    nonce = w3.eth.get_transaction_count(account.address)
+
+    # Build the transaction
     txn = function(*args).build_transaction({
         'from': account.address,
         'value': value,  # Sending ether if needed (0 by default)
         'gas': 2000000,
-        'gasPrice': w3.eth.gas_price + 2000000000,  # Increase gas price slightly to avoid underpriced replacement
-        'nonce': w3.eth.get_transaction_count(account.address),
+        'gasPrice': gas_price,  # Using provided or default gas price
+        'nonce': nonce,
         'chainId': 11155111  # Sepolia chain ID
     })
 
     # Sign the transaction
     signed_txn = w3.eth.account.sign_transaction(txn, private_key)
+    
     # Send the transaction
     txn_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    
     return txn_hash.hex()
+
+
 
 
 # Send a payable transaction (used when sending Ether along with a function call)
