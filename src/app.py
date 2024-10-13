@@ -120,6 +120,7 @@ def create_contract():
     new_contract = convert_objectid(new_contract)
     
     return jsonify({"message": "Contract and report created successfully", "contract": new_contract}), 201
+
 # Route 4: GET /reports
 @app.route('/reports', methods=['GET'])
 def get_reports():
@@ -130,6 +131,46 @@ def get_reports():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Get report by contract ID
+@app.route('/report/<contract_id>', methods=['GET'])
+def get_report(contract_id):
+    report = db.report.find_one({"contract_id": contract_id})
+    if not report:
+        return jsonify({"error": "Report not found"}), 404
 
+    # Convert MongoDB ObjectId to string and return the report
+    report = convert_objectid(report)
+    return jsonify(report), 200
+    
+@app.route('/reports/append/<contract_id>', methods=['POST'])
+def append_results(contract_id):
+    try:
+        # Get the new data from the request body (JSON format)
+        data = request.json
+        new_results = data.get("results", "")
+
+        if not new_results:
+            return jsonify({"error": "No results provided"}), 400
+
+        # Find the report by contract_id
+        report = db.report.find_one({"contract_id": contract_id})
+
+        if not report:
+            return jsonify({"error": "Report not found"}), 404
+
+        # Append new results to the existing results
+        updated_results = (report.get("results", "") + "\n" + new_results).strip()
+
+        # Update the report's results field
+        db.report.update_one(
+            {"contract_id": contract_id},
+            {"$set": {"results": updated_results}}
+        )
+
+        return jsonify({"message": "Results updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)

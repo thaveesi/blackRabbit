@@ -33,7 +33,7 @@ function App() {
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/contract/:contract_id" element={<ContractDetails />} /> {/* Dynamic Route */}
           <Route path="/reports" element={<Reports />} />
-          <Route path="/report/:report_id" element={<ReportDetails />} /> {/* Dynamic Route */}
+          <Route path="/report/:contract_id" element={<ReportDetails />} /> {/* Dynamic Route */}
           {/* Add routes for Help and Settings if needed */}
         </Routes>
       </main>
