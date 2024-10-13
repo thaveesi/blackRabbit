@@ -80,3 +80,9 @@ def create_report(text: str, created_at: datetime):
         "text": text,
         "created_at": created_at
     }
+
+def get_uploaded_contract_address_abi(contract_address: str):
+    contract = smart_contracts.find_one({"addr": contract_address})
+    if contract and "abi" in contract:
+        return contract["abi"]
+    return None

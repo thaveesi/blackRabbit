@@ -1,0 +1,1 @@
+ETHERSCAN_BASE_URL = "https://api-sepolia.etherscan.io/api"

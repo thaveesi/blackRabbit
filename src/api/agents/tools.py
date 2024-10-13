@@ -1,8 +1,10 @@
+import requests
 from web3 import Web3
 import json
 import os
 import solcx
 from solcx import compile_standard
+from api.constants import ETHERSCAN_BASE_URL
 
 # Load the contract ABI from a file
 def load_abi(abi_path):
@@ -134,7 +136,7 @@ def submit_batch_transactions(w3, private_key, contract_address, abi, function_n
 def trigger_self_destruct(w3, private_key, contract_address, abi):
     return send_transaction(
         w3=w3,
-        private_key=private_key,
+        wallet_private_key=private_key,
         contract_address=contract_address,
         abi=abi,
         function_name="selfDestruct"
@@ -263,8 +265,8 @@ def compile_solidity_contract(source_code: str):
             }
         })
         
-        bytecode = compiled_sol['contracts']['Contract.sol']['MaliciousReentrancy']['evm']['bytecode']['object']
-        abi = compiled_sol['contracts']['Contract.sol']['MaliciousReentrancy']['abi']
+        bytecode = compiled_sol['contracts']['Contract.sol']['Malicious']['evm']['bytecode']['object']
+        abi = compiled_sol['contracts']['Contract.sol']['Malicious']['abi']
         return {
             "bytecode": bytecode,
             "abi": abi
@@ -307,3 +309,36 @@ def trigger_reentrancy_attack(w3: Web3, private_key: str, contract_abi: list, co
     except Exception as e:
         print(f"Error in triggering reentrancy attack: {e}")
         return None
+
+def get_abi_and_source_code_etherscan(address: str):
+    """
+    Fetches the ABI and source code of a contract from Etherscan.
+
+    Parameters:
+        address (str): The address of the contract to fetch.
+
+    Returns:
+        tuple: A tuple containing the source code and the ABI.
+    """
+    # Fetch the contract ABI from Etherscan
+    abi_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getabi&address={address}&apikey={ETHERSCAN_API_KEY}")
+    abi_data = abi_response.json()
+
+    if abi_data.get("status") != "1":
+        raise Exception("Unable to fetch ABI")
+
+    # Parse the ABI JSON string into a Python list
+    try:
+        abi_parsed = json.loads(abi_data.get("result"))
+    except json.JSONDecodeError:
+        raise Exception("Failed to parse ABI")
+
+    # Fetch the contract source code from Etherscan
+    sourcecode_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}")
+    sourcecode_data = sourcecode_response.json()
+
+    if sourcecode_data.get("status") != "1":
+        raise Exception("Unable to fetch source code")
+
+    source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
+    return source_code_result, abi_parsed

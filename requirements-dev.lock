@@ -13,6 +13,8 @@
 aiohappyeyeballs==2.4.3
     # via aiohttp
 aiohttp==3.10.10
+    # via langchain
+    # via langchain-community
     # via web3
 aiosignal==1.3.1
     # via aiohttp
@@ -39,6 +41,8 @@ click==8.1.7
     # via flask
 cytoolz==1.0.0
     # via eth-utils
+dataclasses-json==0.6.7
+    # via langchain-community
 distro==1.9.0
     # via openai
 dnspython==2.7.0
@@ -106,24 +110,55 @@ jsonpatch==1.33
     # via langchain-core
 jsonpointer==3.0.0
     # via jsonpatch
+langchain==0.3.3
+    # via langchain-community
+langchain-community==0.3.2
+    # via api
+    # via langchain-experimental
 langchain-core==0.3.10
+    # via langchain
+    # via langchain-community
+    # via langchain-experimental
     # via langchain-openai
+    # via langchain-text-splitters
+    # via langgraph
+    # via langgraph-checkpoint
+langchain-experimental==0.3.2
+    # via api
 langchain-openai==0.2.2
     # via api
+langchain-text-splitters==0.3.0
+    # via langchain
+langgraph==0.2.35
+    # via api
+langgraph-checkpoint==2.0.1
+    # via langgraph
 langsmith==0.1.134
+    # via langchain
+    # via langchain-community
     # via langchain-core
 markupsafe==3.0.1
     # via jinja2
     # via werkzeug
+marshmallow==3.22.0
+    # via dataclasses-json
+msgpack==1.1.0
+    # via langgraph-checkpoint
 multidict==6.1.0
     # via aiohttp
     # via yarl
+mypy-extensions==1.0.0
+    # via typing-inspect
+numpy==1.26.4
+    # via langchain
+    # via langchain-community
 openai==1.51.2
     # via langchain-openai
 orjson==3.10.7
     # via langsmith
 packaging==23.2
     # via langchain-core
+    # via marshmallow
     # via py-solc-x
 parsimonious==0.10.0
     # via eth-abi
@@ -136,24 +171,33 @@ pycryptodome==3.21.0
     # via eth-keyfile
 pydantic==2.9.2
     # via eth-account
+    # via langchain
     # via langchain-core
     # via langsmith
     # via openai
+    # via pydantic-settings
     # via web3
 pydantic-core==2.23.4
     # via pydantic
+pydantic-settings==2.5.2
+    # via langchain-community
 pymongo==4.10.1
     # via api
 python-dotenv==1.0.1
     # via api
+    # via pydantic-settings
 pyunormalize==16.0.0
     # via web3
 pyyaml==6.0.2
+    # via langchain
+    # via langchain-community
     # via langchain-core
 regex==2024.9.11
     # via parsimonious
     # via tiktoken
 requests==2.32.3
+    # via langchain
+    # via langchain-community
     # via langsmith
     # via py-solc-x
     # via requests-toolbelt
@@ -168,7 +212,12 @@ sniffio==1.3.1
     # via anyio
     # via httpx
     # via openai
+sqlalchemy==2.0.35
+    # via langchain
+    # via langchain-community
 tenacity==8.5.0
+    # via langchain
+    # via langchain-community
     # via langchain-core
 tiktoken==0.8.0
     # via langchain-openai
@@ -184,7 +233,11 @@ typing-extensions==4.12.2
     # via openai
     # via pydantic
     # via pydantic-core
+    # via sqlalchemy
+    # via typing-inspect
     # via web3
+typing-inspect==0.9.0
+    # via dataclasses-json
 urllib3==2.2.3
     # via requests
     # via types-requests
