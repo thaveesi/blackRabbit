@@ -97,8 +97,9 @@ def create_contract():
     source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
 
     # Insert contract details into the smart_contract collection
+    contract_id = f"contract_{int(datetime.timestamp(datetime.now()))}"
     new_contract = {
-        "contract_id": f"contract_{int(datetime.timestamp(datetime.now()))}",
+        "contract_id": contract_id,
         "name": name,
         "addr": address,
         "abi": abi_parsed,  # Store the parsed ABI list
@@ -107,9 +108,18 @@ def create_contract():
     }
     db.smart_contract.insert_one(new_contract)
 
-    new_contract = convert_objectid(new_contract)  # Convert ObjectIds to strings before returning
-    return jsonify({"message": "Contract created successfully", "contract": new_contract}), 201
+    # Insert contract details into the reports collection
+    new_report = {
+        "contract_id": contract_id,
+        "contract_name": name,
+        "created_at": datetime.now()
+    }
+    db.report.insert_one(new_report)
 
+    # Convert ObjectIds to strings before returning
+    new_contract = convert_objectid(new_contract)
+    
+    return jsonify({"message": "Contract and report created successfully", "contract": new_contract}), 201
 # Route 4: GET /reports
 @app.route('/reports', methods=['GET'])
 def get_reports():
