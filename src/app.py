@@ -10,7 +10,6 @@ import json
 from bson import ObjectId  # Import ObjectId
 from api.constants import ETHERSCAN_BASE_URL
 from schema import get_all_reports
-from api.agents.mas import run_mas
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -140,21 +139,6 @@ def get_report(contract_id):
     if not report:
         return jsonify({"error": "Report not found"}), 404
 
-# Route 5: POST /analyze
-@app.route('/analyze', methods=['POST'])
-def analyze_contract():
-    data = request.json
-    query = data.get('query')
-    if not query:
-        return jsonify({"error": "Query is required"}), 400
-    
-    result = run_mas(query)
-    return jsonify({"result": result}), 200
-
-    # Convert MongoDB ObjectId to string and return the report
-    report = convert_objectid(report)
-    return jsonify(report), 200
-    
 @app.route('/reports/append/<contract_id>', methods=['POST'])
 def append_results(contract_id):
     try:

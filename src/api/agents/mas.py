@@ -9,7 +9,7 @@ from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMe
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Annotated, Sequence, TypedDict
 import operator
-from api.agents.constants import planner_system_prompt, executor_system_prompt, smart_contract_writer_system_prompt
+from api.agents.constants import planner_system_prompt, executor_system_prompt, smart_contract_writer_system_prompt, reflector_system_prompt
 
 from langgraph.prebuilt import ToolNode
 
@@ -47,13 +47,16 @@ def create_agent(llm, tools=None, system_message: str = ""):
         return prompt | llm
 
 # Helper function to create a node for a given agent
-def agent_node(state, agent, name):
+def agent_node(state, agent, name, msg_role = "ai"):
     result = agent.invoke(state)
     # We convert the agent output into a format that is suitable to append to the global state
     if isinstance(result, ToolMessage):
         pass
     else:
-        result = AIMessage(**result.dict(exclude={"type", "name"}), name=name)
+        if msg_role == "ai":
+            result = AIMessage(**result.dict(exclude={"type", "name"}), name=name)
+        else:
+            result = HumanMessage(**result.dict(exclude={"type", "name"}), name=name)
     return {
         "messages": [result],
         # Since we have a strict workflow, we can
@@ -75,23 +78,25 @@ def router(state):
 
 
 def create_graph():
-    planner_tools = [get_uploaded_source_code_tool]
+    planner_tools = [get_uploaded_source_code_tool, get_uploaded_abi_tool, deploy_malicious_contract_tool, trigger_reentrancy_attack_tool, send_txn_tool]
     executor_tools = [send_txn_tool, deploy_malicious_contract_tool, trigger_reentrancy_attack_tool, get_uploaded_source_code_tool, get_uploaded_abi_tool]
     smart_contract_writer_tools = [
         get_uploaded_source_code_tool,
         get_uploaded_abi_tool,
     ]
+    tools = planner_tools + executor_tools + smart_contract_writer_tools
     wrn = create_wrn()
     gpt4 = create_gpt_4()
 
     planner_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=planner_system_prompt)
     executor_agent = create_agent(llm=gpt4, tools=executor_tools, system_message=executor_system_prompt)
     smart_contract_writer_agent = create_agent(llm=wrn, tools=smart_contract_writer_tools, system_message=smart_contract_writer_system_prompt)
+    reflector_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=reflector_system_prompt)
 
     planner_node = functools.partial(agent_node, agent=planner_agent, name="planner")
     executor_node = functools.partial(agent_node, agent=executor_agent, name="executor")
     smart_contract_writer_node = functools.partial(agent_node, agent=smart_contract_writer_agent, name="smart_contract_writer")
-    tools = planner_tools + executor_tools + smart_contract_writer_tools
+    reflector_node = functools.partial(agent_node, agent=reflector_agent, name="reflector", msg_role="human")
     tools_node = ToolNode(tools=tools)
 
 
@@ -99,6 +104,7 @@ def create_graph():
     graph_builder.add_node("planner", planner_node)
     graph_builder.add_node("executor", executor_node)
     graph_builder.add_node("smart_contract_writer", smart_contract_writer_node)
+    graph_builder.add_node("reflector", reflector_node)
     graph_builder.add_node('call_tool', tools_node)
 
     graph_builder.add_edge(START, "planner")
@@ -110,10 +116,15 @@ def create_graph():
     graph_builder.add_conditional_edges(
         "executor",
         router,
-        {"continue":END, "call_tool": "call_tool", END: END},
+        {"continue": "reflector", "call_tool": "call_tool", END: END},
     )
     graph_builder.add_conditional_edges(
         "smart_contract_writer",
+        router,
+        {"continue": "reflector", "call_tool": "call_tool", END: END},
+    )
+    graph_builder.add_conditional_edges(
+        "reflector",
         router,
         {"continue": "executor", "call_tool": "call_tool", END: END},
     )
@@ -129,6 +140,7 @@ def create_graph():
             "planner": "planner",
             "executor": "executor",
             "smart_contract_writer": "smart_contract_writer",
+            "reflector": "reflector",
         },
     )
 
@@ -137,7 +149,8 @@ def create_graph():
     return graph
 
 def run(graph):
-    user_input = "Create a plan to find problems in the smart contract at address: 0x8AdD1b01116cAcAE62D9bcCbF43aa002C47CF2e7"
+    addr = "0x8d4255bf30Ad54BAdcc672fAE977b9D3f15C3f18, 0xBf7446A56F00f88FF72A7C57Db945EE2132F421d, 0xD1A5c53E7F930248083597Ba88C84c1b087ED89e"
+    user_input = f"Create a plan to find problems in this smart contract at these addresses: {addr}"
     config = {"configurable": {"thread_id": "1"}}
     # The config is the **second positional argument** to stream() or invoke()!
     events = graph.stream({"messages": [HumanMessage(content=user_input)]}, config, stream_mode="values")
