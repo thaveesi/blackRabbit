@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Use this for navigation
 import ActivityTables from './ActivityTables';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 // Define the RecentContract component with dynamic fetching
 const RecentContract = ({ contract, status }: { contract: any; status: string }) => {
@@ -87,12 +88,15 @@ const Dashboard: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Dashboard</h1>
         <div>
-          <button className="bg-blue-600 rounded-xl text-white px-4 py-2 rounded mr-2">
+          {/* <button className="bg-blue-600 rounded-xl text-white px-4 py-2 rounded mr-2">
             Connect Wallet
-          </button>
-          <button className="bg-gray-800 rounded-xl text-white px-4 py-2 rounded">
+          </button> */}
+          <div className='className="bg-blue-600 rounded-xl text-white px-4 py-2 rounded mr-2"'>
+            <ConnectButton />
+          </div>
+          {/* <button className="bg-gray-800 rounded-xl text-white px-4 py-2 rounded">
             Test New Contract
-          </button>
+          </button> */}
         </div>
       </div>
 
