@@ -8,9 +8,9 @@ import Reports from './components/Reports'
 
 function App() {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-white-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md">
+      <aside className="w-64 bg-gray shadow-md">
         <div className="p-4">
           <Link to="/" className="text-2xl font-bold text-blue-600">MAS</Link>
         </div>

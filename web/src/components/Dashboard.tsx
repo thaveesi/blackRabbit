@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <h2 className="text-xl font-semibold mb-4">Activity Feed</h2>
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
+      <div className="bg-white rounded-lg border border-gray-300 border-opacity-40 overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100">

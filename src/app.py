@@ -172,5 +172,22 @@ def append_results(contract_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+# Route 5: GET /contracts/<contract_id>/events
+@app.route('/contracts/<contract_id>/events', methods=['GET'])
+def get_contract_events(contract_id):
+    try:
+        # Fetch events related to the specific contract_id
+        events = list(db.events.find({"smart_contract_id": contract_id}))
+        
+        if not events:
+            return jsonify({"error": "No events found for the contract"}), 404
+
+        # Convert ObjectIds to strings
+        events = convert_objectid(events)
+
+        return jsonify({"events": events}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const RecentContract = ({ name, status }: { name: string; status: string }) => (
-    <div className="bg-white p-4 rounded-lg shadow">
+    <div className="bg-white p-4 rounded-lg">
         <h3 className="font-semibold">{name}</h3>
         <span
             className={`text-sm ${
@@ -75,9 +75,9 @@ const Contracts: React.FC = () => {
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="w-full max-w-lg">
-                <h1 className="text-3xl font-bold text-center mb-8">Smart Contracts</h1>
+                {/* <h1 className="text-3xl font-bold text-center mb-8">Smart Contracts</h1> */}
 
-                <h2 className="text-xl font-semibold text-center mb-4">Penetration Test</h2>
+                <h1 className="text-xl font-semibold mb-4">Penetration Test</h1>
                 <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
                     <div className="mb-6">
                         <label className="block text-gray-800 text-sm font-bold mb-2" htmlFor="name">
