@@ -75,21 +75,6 @@ const ContractDetails: React.FC = () => {
     const contractAddress = contractData?.contract_info.addr || 'Unknown Address';
     const sourceCode = contractData?.contract_info.source_code || '// No source code available';
 
-    // Format date and time from createdAt field
-    const formatDateTime = (isoString: string) => {
-        const dateObj = new Date(isoString);
-        if (isNaN(dateObj.getTime())) {
-            return 'Invalid Date'; // Check if the date is valid
-        }
-        return dateObj.toLocaleString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-        }).replace(',', ''); // Format MM/DD HH:mm:ss
-    };
 
     const agentIcons: { [key: string]: React.ReactNode } = {
         planner: (
@@ -185,11 +170,11 @@ const ContractDetails: React.FC = () => {
                                 {events.map((event: Event, idx: number) => (
                                     <tr key={idx} className="border-b">
                                         <td className="py-4 px-4 border-r text-gray-600">{event.created_at}</td>
-                                        <td className="py-4 px-4 border-r flex items-center text-gray-600">
-                                            <span className="mr-2">{agentIcons[event.agent] || '👤'}</span>
+                                        <td className="py-4 px-4 flex items-center text-gray-600">
+                                            <span className="mr-2">{agentIcons[event.agent]}</span>
                                             <span>{event.agent}</span>
                                         </td>
-                                        <td className="py-4 px-4 text-gray-600">{event.action}</td>
+                                        <td className="py-4 px-4 border-l text-gray-600">{event.action}</td>
                                     </tr>
                                 ))}
                             </tbody>

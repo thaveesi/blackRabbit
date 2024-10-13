@@ -3,7 +3,7 @@ import axios from 'axios';  // Use axios for API calls
 
 interface Event {
     _id: string;
-    createdAt: string;
+    created_at: string;
     agent: string;
     action: string;
 }
@@ -144,20 +144,6 @@ const ActivityTables: React.FC = () => {
         )
     };
 
-    const formatDateTime = (isoString: string) => {
-        const dateObj = new Date(isoString);
-        if (isNaN(dateObj.getTime())) {
-            return 'Invalid Date';
-        }
-        return dateObj.toLocaleString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-        }).replace(',', ''); // Format MM/DD HH:mm:ss
-    };
 
     // Ensure the selectedContractIndex is within bounds
     const validSelectedContractIndex = selectedContractIndex < contractsWithEvents.length ? selectedContractIndex : 0;
@@ -205,12 +191,12 @@ const ActivityTables: React.FC = () => {
                             <tbody>
                                 {selectedContract.events.map((event, idx) => (
                                     <tr key={idx}>
-                                        <td className="py-2 px-4 border-b border-l border-gray-200 text-gray-600">{formatDateTime(event.createdAt)}</td>
-                                        <td className="py-2 px-4 border-b border-l border-gray-200 flex items-center text-gray-600">
-                                            <span className="mr-2">{agentIcons[event.agent] || '👤'}</span>
+                                        <td className="py-2 px-4 border-t border-l border-r border-gray-200 text-gray-600">{event.created_at}</td>
+                                        <td className="py-2 px-4 border-t border-gray-200 flex items-center text-gray-600">
+                                            <span className="mr-2">{agentIcons[event.agent]}</span>
                                             <span>{event.agent}</span>
                                         </td>
-                                        <td className="py-2 px-4 border-b border-l border-r border-gray-200 text-gray-600">{event.action}</td>
+                                        <td className="py-2 px-4 border-t border-l border-r border-gray-200 text-gray-600">{event.action}</td>
                                     </tr>
                                 ))}
                             </tbody>
