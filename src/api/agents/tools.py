@@ -4,7 +4,7 @@ import json
 import os
 import solcx
 from solcx import compile_standard
-from api.constants import ETHERSCAN_BASE_URL
+from api.constants import ETHERSCAN_API_KEY, ETHERSCAN_BASE_URL
 
 # Load the contract ABI from a file
 def load_abi(abi_path):
@@ -339,6 +339,8 @@ def get_abi_and_source_code_etherscan(address: str):
 
     if sourcecode_data.get("status") != "1":
         raise Exception("Unable to fetch source code")
+
+    print(sourcecode_data)
 
     source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
     return source_code_result, abi_parsed

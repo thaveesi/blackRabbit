@@ -83,3 +83,30 @@ def deploy_malicious_contract_tool(
     abi = compiled_sol["abi"]
     txn_hash = deploy_malicious_contract(w3=w3, private_key=pk, bytecode=bytecode, abi=abi, target_contract_address=target_contract_address)
     return txn_hash
+
+
+@tool
+def get_uploaded_source_code_tool(contract_address: Annotated[str, Field(description="The address of the smart contract to interact with")]) -> str:
+    """
+    Get the source code of a smart contract from Etherscan.
+
+    Args:
+        contract_address (str): The address of the smart contract to fetch the source code for.
+
+    Returns:
+        str: The source code of the smart contract.
+    """
+    return get_abi_and_source_code_etherscan(contract_address)[0]
+
+@tool
+def get_uploaded_abi_tool(contract_address: Annotated[str, Field(description="The address of the smart contract to interact with")]) -> str:
+    """
+    Get the ABI of a smart contract from Etherscan.
+
+    Args:
+        contract_address (str): The address of the smart contract to fetch the source code for.
+
+    Returns:
+        str: The source code of the smart contract.
+    """
+    return get_abi_and_source_code_etherscan(contract_address)[0]
