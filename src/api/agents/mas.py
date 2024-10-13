@@ -207,7 +207,7 @@ def run_mas_workflow(contract_id, address):
                     agent_name = message.name
                     print(agent_name)
                 else:
-                    agent_name = "NA"
+                    agent_name = "unknown"
                     
                 insert_event(contract_id=contract_id, agent=agent_name, action=message.content)
                 print("Inserted Event")
