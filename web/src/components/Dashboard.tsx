@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
             <RecentContract
               contract={contract}
               status={
-                contract.someStatusField || 'Unknown' // Adjust status field based on your data
+                contract.created_at || 'Completed' // Adjust status field based on your data
               }
             />
           </div>
