@@ -9,7 +9,7 @@ from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMe
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Annotated, Sequence, TypedDict
 import operator
-from api.agents.constants import planner_system_prompt, executor_system_prompt, smart_contract_writer_system_prompt, reflector_system_prompt
+from api.agents.constants import planner_system_prompt, executor_system_prompt, smart_contract_writer_system_prompt, reflector_system_prompt, reporter_system_prompt
 
 from langgraph.prebuilt import ToolNode
 
@@ -92,11 +92,13 @@ def create_graph():
     executor_agent = create_agent(llm=gpt4, tools=executor_tools, system_message=executor_system_prompt)
     smart_contract_writer_agent = create_agent(llm=wrn, tools=smart_contract_writer_tools, system_message=smart_contract_writer_system_prompt)
     reflector_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=reflector_system_prompt)
+    reporter_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=reporter_system_prompt)
 
     planner_node = functools.partial(agent_node, agent=planner_agent, name="planner")
     executor_node = functools.partial(agent_node, agent=executor_agent, name="executor")
     smart_contract_writer_node = functools.partial(agent_node, agent=smart_contract_writer_agent, name="smart_contract_writer")
-    reflector_node = functools.partial(agent_node, agent=reflector_agent, name="reflector", msg_role="human")
+    reflector_node = functools.partial(agent_node, agent=reflector_agent, name="reflector", msg_role="ai")
+    reporter_node = functools.partial(agent_node, agent=reporter_agent, name="reporter")
     tools_node = ToolNode(tools=tools)
 
 
@@ -105,6 +107,7 @@ def create_graph():
     graph_builder.add_node("executor", executor_node)
     graph_builder.add_node("smart_contract_writer", smart_contract_writer_node)
     graph_builder.add_node("reflector", reflector_node)
+    graph_builder.add_node("reporter", reporter_node)
     graph_builder.add_node('call_tool', tools_node)
 
     graph_builder.add_edge(START, "planner")
@@ -116,7 +119,7 @@ def create_graph():
     graph_builder.add_conditional_edges(
         "executor",
         router,
-        {"continue": "reflector", "call_tool": "call_tool", END: END},
+        {"continue": "reflector", "call_tool": "call_tool", END: "reporter"},
     )
     graph_builder.add_conditional_edges(
         "smart_contract_writer",
@@ -126,7 +129,12 @@ def create_graph():
     graph_builder.add_conditional_edges(
         "reflector",
         router,
-        {"continue": "executor", "call_tool": "call_tool", END: END},
+        {"continue": "executor", "call_tool": "call_tool", END: "reporter"},
+    )
+    graph_builder.add_conditional_edges(
+        "reporter",
+        router,
+        {"continue":END, "call_tool": END, END: END},
     )
 
     graph_builder.add_conditional_edges(
@@ -157,6 +165,8 @@ def run(graph):
     for event in events:
         if "messages" in event:
             event["messages"][-1].pretty_print()
+    
+
 
 if __name__ == "__main__":
     graph = create_graph()

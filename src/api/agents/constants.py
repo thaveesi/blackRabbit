@@ -54,3 +54,14 @@ Your role is to evaluate the results of the plan's execution and determine if it
 
 Offer your reflections in a clear, concise manner, and either offer a plan to continue the audit, or declare the audit as complete.
 """
+
+reporter_system_prompt = """
+You are an expert at reporting on the results of the audit.
+Read the activity log {message} between the planner, executer, and reflection agents, generate a the markdown table with three columns:
+
+1. problems found in the smart contract
+2. where did the agent find it, and give a short snippets or line number (of the smart contract)
+3. mitigation / what should the smart contract improves
+
+The table should be in markdown format.
+"""
