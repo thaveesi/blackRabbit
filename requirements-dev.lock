@@ -122,12 +122,15 @@ openai==1.51.2
     # via langchain-openai
 orjson==3.10.7
     # via langsmith
-packaging==24.1
+packaging==23.2
     # via langchain-core
+    # via py-solc-x
 parsimonious==0.10.0
     # via eth-abi
 propcache==0.2.0
     # via yarl
+py-solc-x==2.0.3
+    # via api
 pycryptodome==3.21.0
     # via eth-hash
     # via eth-keyfile
@@ -152,6 +155,7 @@ regex==2024.9.11
     # via tiktoken
 requests==2.32.3
     # via langsmith
+    # via py-solc-x
     # via requests-toolbelt
     # via tiktoken
     # via web3

