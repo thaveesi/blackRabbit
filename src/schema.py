@@ -1,14 +1,25 @@
+import os
+from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 
 # Assuming you have a MongoDB connection string
-client = MongoClient('your_mongodb_connection_string_here')
-db = client['your_database_name']
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MONGO_URI = os.getenv('MONGO_URI')
+
+client = MongoClient(MONGO_URI)
+db = client['mydatabase']
 
 # Define collections
-smart_contracts = db.smart_contracts
-events = db.events
-reports = db.reports
+smart_contracts = db.smart_contract
+events = db.event
+reports = db.report
+
+def create_id(object_type: str):
+    return f'{object_type}_{int(datetime.timestamp(datetime.now()))}'
 
 # Schema definitions (these are not enforced by MongoDB, but serve as a guide)
 
@@ -29,7 +40,9 @@ event_schema = {
 
 report_schema = {
     "_id": ObjectId,
-    "text": str
+    "report_id": str,
+    "text": str,
+    "created_at": datetime
 }
 
 # Example of how to insert a document
@@ -45,4 +58,25 @@ def get_smart_contract_by_id(contract_id):
     return smart_contracts.find_one({"_id": ObjectId(contract_id)})
 
 # You can add more helper functions for CRUD operations as needed
+def get_all_reports():
+    all_reports = list(reports.find())
+    for report in all_reports:
+        report['_id'] = str(report['_id'])
+    return all_reports
 
+def create_report(text: str, created_at: datetime):
+    report_id = create_id('report')
+    new_report = {
+        "report_id": report_id,
+        "text": text,
+        "created_at": created_at
+    }
+    result = reports.insert_one(new_report)
+    # Convert ObjectId to string for easier handling
+    inserted_id = str(result.inserted_id)
+    return {
+        "_id": inserted_id,
+        "report_id": report_id,
+        "text": text,
+        "created_at": created_at
+    }

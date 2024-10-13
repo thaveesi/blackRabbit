@@ -1,7 +1,9 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import Dashboard from './components/Dashboard'
 import Contracts from './components/Contracts'
+import ContractDetails from './components/ContractDetails'
 import './App.css'
+import Reports from './components/Reports'
 
 function App() {
   return (
@@ -9,7 +11,7 @@ function App() {
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md">
         <div className="p-4">
-          <Link to="/" className="text-2xl font-bold text-blue-600">G</Link>
+          <Link to="/" className="text-2xl font-bold text-blue-600">MAS</Link>
         </div>
         <nav className="mt-8">
           <Link to="/" className="block py-2 px-4 text-gray-600 hover:bg-gray-200">Dashboard</Link>
@@ -28,7 +30,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/contracts" element={<Contracts />} />
-          {/* <Route path="/reports" element={<Reports />} /> */}
+          <Route path="/contract/:contract_id" element={<ContractDetails />} /> {/* Dynamic Route */}
+          <Route path="/reports" element={<Reports />} />
           {/* Add routes for Help and Settings if needed */}
         </Routes>
       </main>

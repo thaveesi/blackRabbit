@@ -3,17 +3,18 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime
 import requests
+import os
 from dotenv import load_dotenv
 import os
 import json
 from bson import ObjectId  # Import ObjectId
+from schema import get_all_reports
 
-load_dotenv()
+load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
-
 # Enable CORS
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+CORS(app)
 
 # MongoDB connection
 MONGO_URI = os.getenv("MONGO_URI")
@@ -85,21 +86,40 @@ def create_contract():
         abi_parsed = json.loads(abi_data.get("result"))
     except json.JSONDecodeError:
         return jsonify({"error": "Failed to parse ABI"}), 400
-    
-    print(abi_data)
+
+    # Fetch the contract source code from Etherscan
+    sourcecode_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}")
+    sourcecode_data = sourcecode_response.json()
+
+    if sourcecode_data.get("status") != "1":
+        return jsonify({"error": "Unable to fetch source code"}), 400
+
+    source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
 
     # Insert contract details into the smart_contract collection
     new_contract = {
         "contract_id": f"contract_{int(datetime.timestamp(datetime.now()))}",
         "name": name,
         "addr": address,
-        "source_code": abi_parsed,  # Store the parsed ABI list
+        "abi": abi_parsed,  # Store the parsed ABI list
+        "source_code": source_code_result,  # Store the verified source code
         "created_at": datetime.now()
     }
     db.smart_contract.insert_one(new_contract)
 
     new_contract = convert_objectid(new_contract)  # Convert ObjectIds to strings before returning
     return jsonify({"message": "Contract created successfully", "contract": new_contract}), 201
+
+# Route 4: GET /reports
+@app.route('/reports', methods=['GET'])
+def get_reports():
+    try:
+        # Fetch all reports from the database
+        all_reports = get_all_reports()
+        return jsonify(all_reports), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
