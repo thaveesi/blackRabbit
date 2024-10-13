@@ -76,7 +76,7 @@ const Contracts: React.FC = () => {
             <div className="w-full max-w-lg">
                 {/* <h1 className="text-3xl font-bold text-center mb-8">Smart Contracts</h1> */}
 
-                <h1 className="text-3xl font-semibold mb-4">Penetration Test</h1>
+                <h1 className="text-4xl font-bold mb-4">Penetration Test</h1>
                 <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg">
                     <div className="mb-6">
                         <label className="block text-gray-800 text-sm font-bold mb-2" htmlFor="name">

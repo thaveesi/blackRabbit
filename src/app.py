@@ -99,13 +99,14 @@ def create_contract():
 
     # Insert contract details into the smart_contract collection
     contract_id = f"contract_{int(datetime.timestamp(datetime.now()))}"
+    right_now = datetime.now()
     new_contract = {
         "contract_id": contract_id,
         "name": name,
         "addr": address,
         "abi": abi_parsed,  # Store the parsed ABI list
         "source_code": source_code_result,  # Store the verified source code
-        "created_at": datetime.now()
+        "created_at": right_now
     }
     db.smart_contract.insert_one(new_contract)
 
@@ -113,7 +114,7 @@ def create_contract():
     new_report = {
         "contract_id": contract_id,
         "contract_name": name,
-        "created_at": datetime.now()
+        "created_at": right_now
     }
     db.report.insert_one(new_report)
 

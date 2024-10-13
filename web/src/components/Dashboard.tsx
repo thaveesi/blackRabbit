@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Use this for navigation
+import ActivityTables from './ActivityTables';
 
 // Define the RecentContract component with dynamic fetching
 const RecentContract = ({ contract, status }: { contract: any; status: string }) => {
@@ -110,50 +111,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <h2 className="text-xl font-semibold mb-4">Activity Feed</h2>
-      <div className="bg-white rounded-lg border border-gray-500 border-opacity-30 overflow-x-auto">
-        <table className="w-full ">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 text-left">Date</th>
-              <th className="py-2 px-4 text-left">Time</th>
-              <th className="py-2 px-4 text-left">Contract</th>
-              <th className="py-2 px-4 text-left">Agent</th>
-              <th className="py-2 px-4 text-left">Action</th>
-              <th className="py-2 px-4 text-left">Issue</th>
-              <th className="py-2 px-4 text-left">Priority</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ActivityRow
-              date="10/12/2024"
-              time="2:40"
-              contract="Contract A"
-              agent="Bob"
-              action="Deployed to testnet"
-              issue="None"
-              priority="None"
-            />
-            <ActivityRow
-              date="10/12/2024"
-              time="2:37"
-              contract="Contract C"
-              agent="Alice"
-              action="Vulnerability detected"
-              issue="Reentrancy"
-              priority="High"
-            />
-            <ActivityRow
-              date="10/12/2024"
-              time="2:15"
-              contract="Contract E"
-              agent="Eve"
-              action="Passed all tests"
-              issue="None"
-              priority="None"
-            />
-          </tbody>
-        </table>
-      </div>
+      <ActivityTables />
     </div>
   );
 };
