@@ -85,7 +85,7 @@ const ActivityTables: React.FC = () => {
     }
 
     const agentIcons: { [key: string]: React.ReactNode } = {
-        Bob: (
+        planner: (
             // SVG Icon for Bob
             <svg
                 width="27"
@@ -117,7 +117,7 @@ const ActivityTables: React.FC = () => {
                 </defs>
             </svg>
         ),
-        Alice: (
+        executor: (
             <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                 <rect width="27" height="27" fill="url(#pattern0_100_2535)" />
                 <defs>
@@ -129,7 +129,7 @@ const ActivityTables: React.FC = () => {
             </svg>
 
         ), // Icon for Alice
-        Eve: (
+        reflector: (
             <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                 <rect width="27" height="27" fill="url(#pattern0_100_2537)" />
                 <defs>
@@ -141,7 +141,7 @@ const ActivityTables: React.FC = () => {
             </svg>
 
         ),   // Icon for Eve
-        John: (
+        NA: (
             <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                 <rect width="27" height="27" fill="url(#pattern0_100_2548)" />
                 <defs>

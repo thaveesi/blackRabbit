@@ -9,6 +9,7 @@ from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMe
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Annotated, Sequence, TypedDict
 import operator
+from langchain.schema import HumanMessage
 from api.agents.constants import planner_system_prompt, executor_system_prompt, reflector_system_prompt, reporter_system_prompt
 
 from langgraph.prebuilt import ToolNode
@@ -174,7 +175,7 @@ def run(graph):
     print("Analysis Started")
     addr = "0x8d4255bf30Ad54BAdcc672fAE977b9D3f15C3f18, 0xBf7446A56F00f88FF72A7C57Db945EE2132F421d, 0xD1A5c53E7F930248083597Ba88C84c1b087ED89e"
     user_input = f"Create a plan to find problems in this smart contract at these addresses: {addr}"
-    config = {"configurable": {"thread_id": "3"}, "recursion_limit": 5}
+    config = {"configurable": {"thread_id": "3"}, "recursion_limit": 20}
     # The config is the **second positional argument** to stream() or invoke()!
     events = graph.stream({"messages": [HumanMessage(content=user_input)]}, config, stream_mode="values")
     for event in events:
@@ -185,20 +186,38 @@ def run(graph):
 def run_mas_workflow(contract_id, address):
     graph = create_graph()
     user_input = f"Create a plan to find problems in this smart contract at this address: {address}"
-    config = {"configurable": {"thread_id": contract_id}, "recursion_limit": 5}
+    config = {"configurable": {"thread_id": contract_id}, "recursion_limit": 30}
     events = graph.stream({"messages": [HumanMessage(content=user_input)]}, config, stream_mode="values")
     # Process all the messages in the result and update the report
     final_result = ""
-    for event in events:
+    try:
+        for event in events:
         # insert into events table
-        if 'messages' in event:
-            message = event['messages'][-1]
-            message.pretty_print()
-            insert_event(contract_id=contract_id, agent=message["name"], action=message.content)
-            final_result += message.content + "\n"  # Append each message's content
-    
-    # Update the report with the entire result
-    update_report(contract_id, final_result)
+            if 'messages' in event:
+                message = event['messages'][-1]
+                print(message)
+                message.pretty_print()
+                # if not message["name"]:
+                #     agent_name="Unknown"
+                # else:
+                #     agent_name=message["name"]
+                # if isinstance(message, HumanMessage):
+                #     agent_name = ""
+                if isinstance(message, AIMessage):
+                    agent_name = message.name
+                    print(agent_name)
+                else:
+                    agent_name = "NA"
+                    
+                insert_event(contract_id=contract_id, agent=agent_name, action=message.content)
+                print("Inserted Event")
+                final_result += message.content + "\n"  # Append each message's content
+        update_report(contract_id, final_result) 
+    except:
+        # Update the report with the entire result
+        update_report(contract_id, final_result)
+        
+        
 
 if __name__ == "__main__":
     graph = create_graph()

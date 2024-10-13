@@ -16,7 +16,7 @@ db = client['mydatabase']
 # Define collections
 smart_contracts = db.smart_contract
 malicious_contracts = db.malicious_contract
-events = db.event
+events = db.events
 reports = db.report
 
 def create_id(object_type: str):
