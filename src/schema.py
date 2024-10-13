@@ -41,9 +41,8 @@ malicious_contract_schema = {
 
 event_schema = {
     "_id": ObjectId,
-    "agent_id": str,
-    "created_at": datetime,
-    "action": str,
+    "agent": str,
+    "created_at": datetime, "action": str,
     "smart_contract_id": ObjectId  # Reference to SmartContract
 }
 
@@ -115,3 +114,12 @@ def update_report(contract_id, final_result):
         {"contract_id": contract_id},
         {"$set": {"results": final_result}}
     )
+
+def insert_event(contract_id, agent, action):
+    new_event = {
+        "agent": agent,
+        "smart_contract_id": contract_id,
+        "action": action,
+        "created_at": datetime.now()
+    }
+    return events.insert_one(new_event)

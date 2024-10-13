@@ -13,7 +13,7 @@ from api.agents.constants import planner_system_prompt, executor_system_prompt, 
 
 from langgraph.prebuilt import ToolNode
 
-from schema import update_report
+from schema import insert_event, update_report
 
 class State(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
@@ -186,13 +186,16 @@ def run_mas_workflow(contract_id, address):
     graph = create_graph()
     user_input = f"Create a plan to find problems in this smart contract at this address: {address}"
     config = {"configurable": {"thread_id": contract_id}, "recursion_limit": 5}
-    
-    events = graph.invoke({"messages": [HumanMessage(content=user_input)]}, config)
-    
+    events = graph.stream({"messages": [HumanMessage(content=user_input)]}, config, stream_mode="values")
     # Process all the messages in the result and update the report
     final_result = ""
-    for message in events["messages"]:
-        final_result += message.content + "\n"  # Append each message's content
+    for event in events:
+        # insert into events table
+        if 'messages' in event:
+            message = event['messages'][-1]
+            message.pretty_print()
+            insert_event(contract_id=contract_id, agent=message["name"], action=message.content)
+            final_result += message.content + "\n"  # Append each message's content
     
     # Update the report with the entire result
     update_report(contract_id, final_result)
