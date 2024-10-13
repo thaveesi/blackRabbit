@@ -14,13 +14,13 @@ export default function Reports() {
         <div className="p-8">
             <h1 className="text-2xl font-bold mb-6">Reports</h1>
             {/* Wrap the table inside a div with width 80% and center it */}
-            <div className="w-4/5 mx-auto bg-white rounded-lg shadow-lg overflow-x-auto">
-                <table className="w-full table-auto">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="py-3 px-6 text-left">Date</th>
-                            <th className="py-3 px-6 text-left">Time</th>
-                            <th className="py-3 px-6 text-left">Contract Name</th>
+            <div className="w-4/5 mx-auto bg-white rounded-lg border-l border-r border-t border-gray-500 border-opacity-30 overflow-x-auto">
+                <table className="min-w-full table-auto text-left">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            <th className="py-4 px-6 border-b border-gray-200 text-base font-semibold text-gray-600">DATE</th>
+                            <th className="py-4 px-6 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">TIME</th>
+                            <th className="py-4 px-6 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">CONTRACT NAME</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -30,13 +30,15 @@ export default function Reports() {
                                 className="border-b hover:bg-gray-100 cursor-pointer transition-all"
                                 onClick={() => handleRowClick(report.contract_id)}
                             >
-                                <td className="py-2 px-6">
+                                <td className="py-4 px-6 border-b border-gray-200 text-gray-600">
                                     {new Date(report.created_at).toLocaleDateString()}
                                 </td>
-                                <td className="py-2 px-6">
+                                <td className="py-4 px-6 border-b border-gray-200 border-l border-gray-100 text-gray-600">
                                     {new Date(report.created_at).toLocaleTimeString()}
                                 </td>
-                                <td className="py-2 px-6">{report.contract_name}</td>
+                                <td className="py-4 px-6 border-b border-gray-200 border-l border-gray-100 text-gray-600">
+                                    {report.contract_name}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

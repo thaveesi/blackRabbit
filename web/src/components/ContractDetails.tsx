@@ -13,7 +13,8 @@ interface Event {
 
 interface ContractData {
     contract_info: {
-        contract_name: string;
+        name: string;
+        addr: string;
         source_code: string;
     };
 }
@@ -70,7 +71,8 @@ const ContractDetails: React.FC = () => {
     }
 
     // Get contract name and source code from the fetched contract data
-    const contractName = contractData?.contract_info.contract_name || 'Unknown Contract';
+    const contractName = contractData?.contract_info.name || 'Unknown Contract';
+    const contractAddress = contractData?.contract_info.addr || 'Unknown Address';
     const sourceCode = contractData?.contract_info.source_code || '// No source code available';
 
     // Group events by contract
@@ -79,10 +81,16 @@ const ContractDetails: React.FC = () => {
         return acc;
     }, {});  // Initial value is an empty object with type GroupedEvents
 
+    const agentIcons: { [key: string]: string } = {
+        Bob: '🧑‍💼', // Icon for Bob
+        Alice: '👩‍💼', // Icon for Alice
+        Eve: '🧑‍🔬',  // Icon for Eve
+    };
+
     return (
         <div className="flex flex-col lg:flex-row p-8">
             {/* Left Section: Code Block */}
-            <div className="lg:w-1/2 bg-gray-20 p-6 rounded-lg border border-gray-300 border-opacity-40 overflow-x-auto">
+            <div className="lg:w-1/2 bg-gray-20 p-6 overflow-x-auto">
                 <h1 className="text-2xl font-bold mb-4">Penetration Test Results - {contractName}</h1>
                 <div className="bg-black text-white p-2 rounded-lg max-w-full overflow-x-auto">
                     <pre className="whitespace-pre-wrap break-all text-sm leading-tight">
@@ -94,43 +102,57 @@ const ContractDetails: React.FC = () => {
             {/* Right Section: Agents & Activity Feed */}
             <div className="lg:w-1/2 lg:pl-6 mt-8 lg:mt-0">
                 {/* Activity Feed */}
-                <div className="bg-gray-20 p-4 rounded-lg border border-gray-300 border-opacity-40">
-                    <h2 className="text-xl font-semibold mb-4">Activity Feed</h2>
-
-                    {Object.keys(groupedEvents).map((contract, index) => (
-                        <table className="min-w-full text-left table-auto" key={index}>
-                            <thead>
-                                <tr>
-                                    <th className="py-2 px-4 border-b border-gray-300 text-sm font-semibold text-gray-600">CONTRACT</th>
-                                    <th className="py-2 px-4 border-b border-gray-300 text-sm font-semibold text-gray-600">DATE</th>
-                                    <th className="py-2 px-4 border-b border-gray-300 text-sm font-semibold text-gray-600">TIME</th>
-                                    <th className="py-2 px-4 border-b border-gray-300 text-sm font-semibold text-gray-600">AGENT</th>
-                                    <th className="py-2 px-4 border-b border-gray-300 text-sm font-semibold text-gray-600">ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {/* Display merged cell for CONTRACT */}
-                                <tr>
-                                    <td className="py-2 px-4 border-b border-gray-200" rowSpan={groupedEvents[contract].length}>{contract}</td>
-                                    {/* First row's other data */}
-                                    <td className="py-2 px-4 border-b border-gray-200">{groupedEvents[contract][0].date}</td>
-                                    <td className="py-2 px-4 border-b border-gray-200">{groupedEvents[contract][0].time}</td>
-                                    <td className="py-2 px-4 border-b border-gray-200">{groupedEvents[contract][0].agent}</td>
-                                    <td className="py-2 px-4 border-b border-gray-200">{groupedEvents[contract][0].action}</td>
-                                </tr>
-
-                                {/* Render remaining rows under the same contract */}
-                                {groupedEvents[contract].slice(1).map((event, idx) => (
-                                    <tr key={idx}>
-                                        <td className="py-2 px-4 border-b border-gray-200">{event.date}</td>
-                                        <td className="py-2 px-4 border-b border-gray-200">{event.time}</td>
-                                        <td className="py-2 px-4 border-b border-gray-200">{event.agent}</td>
-                                        <td className="py-2 px-4 border-b border-gray-200">{event.action}</td>
+                <div className="p-4 bg-white">
+                    <h1 className="text-xl font-semibold mb-4">Activity Feed</h1>
+                    <h2 className="text-md font-light text-gray-400 mb-2">{contractName} - {contractAddress}</h2>
+                    <div className="mx-auto bg-white rounded-lg border-l border-r border-t border-gray-500 border-opacity-30 overflow-x-auto">
+                        {Object.keys(groupedEvents).map((contract, index) => (
+                            <table className="min-w-full text-left table-auto" key={index}>
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="py-4 px-4 border-b border-gray-200 text-base font-semibold text-gray-600">CONTRACT</th>
+                                        <th className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">DATE</th>
+                                        <th className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">TIME</th>
+                                        <th className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">AGENT</th>
+                                        <th className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-base font-semibold text-gray-600">ACTION</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ))}
+                                </thead>
+                                <tbody>
+                                    {/* Display merged cell for CONTRACT */}
+                                    <tr>
+                                        <td
+                                            className="py-4 px-4 rounded-lg border-b border-gray-200 font-semibold text-gray-700 align-top"
+                                            rowSpan={groupedEvents[contract].length}
+                                        >
+                                            {contract}
+                                        </td>
+                                        {/* First row's other data */}
+                                        <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{groupedEvents[contract][0].date}</td>
+                                        <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{groupedEvents[contract][0].time}</td>
+                                        <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 flex items-center text-gray-600">
+                                            {/* Display agent icon and name */}
+                                            <span className="mr-2">{agentIcons[groupedEvents[contract][0].agent] || '👤'}</span>
+                                            <span>{groupedEvents[contract][0].agent}</span>
+                                        </td>
+                                        <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{groupedEvents[contract][0].action}</td>
+                                    </tr>
+
+                                    {/* Render remaining rows under the same contract */}
+                                    {groupedEvents[contract].slice(1).map((event: any, idx: number) => (
+                                        <tr key={idx}>
+                                            <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{event.date}</td>
+                                            <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{event.time}</td>
+                                            <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 flex items-center text-gray-600">
+                                                <span className="mr-2">{agentIcons[event.agent] || '👤'}</span>
+                                                <span>{event.agent}</span>
+                                            </td>
+                                            <td className="py-4 px-4 border-b border-gray-200 border-l border-gray-100 text-gray-600">{event.action}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
