@@ -72,7 +72,7 @@ const Contracts: React.FC = () => {
     };
 
     return (
-        <div className="flex px-16 py-16 my-8 min-h-screen bg-white">
+        <div className="flex px-8 py-8 my-8 min-h-screen bg-white">
             <div className="w-full max-w-lg">
                 {/* <h1 className="text-3xl font-bold text-center mb-8">Smart Contracts</h1> */}
 

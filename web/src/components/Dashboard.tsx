@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-8">
+    <div className="px-8 py-8 my-8 ">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Dashboard</h1>
         <div>

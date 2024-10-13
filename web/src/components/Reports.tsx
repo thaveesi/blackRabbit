@@ -11,7 +11,7 @@ export default function Reports() {
     };
 
     return (
-        <div className="p-8">
+        <div className="px-8 py-8 my-8">
             <h1 className="text-4xl font-bold mb-6">Reports</h1>
             {/* Wrap the table inside a div with width 80% and center it */}
             <div className="w-3/5 bg-white rounded-lg border-l border-r border-t border-gray-500 border-opacity-30 overflow-x-auto">
