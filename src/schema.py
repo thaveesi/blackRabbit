@@ -15,6 +15,7 @@ db = client['mydatabase']
 
 # Define collections
 smart_contracts = db.smart_contract
+malicious_contracts = db.malicious_contract
 events = db.event
 reports = db.report
 
@@ -28,6 +29,14 @@ smart_contract_schema = {
     "addr": str,
     "source_code": str,
     "name": str
+}
+
+malicious_contract_schema = {
+    "_id": ObjectId,
+    "addr": str,
+    "source_code": str,
+    "abi": str,
+    "bytecode": str,
 }
 
 event_schema = {
@@ -86,3 +95,17 @@ def get_uploaded_contract_address_abi(contract_address: str):
     if contract and "abi" in contract:
         return contract["abi"]
     return None
+
+def get_uploaded_malicious_contract_abi(contract_address: str):
+    contract = malicious_contracts.find_one({"addr": contract_address})
+    if contract and "abi" in contract:
+        return contract["abi"]
+    return None
+
+def insert_malicious_contract(addr, source_code, abi, bytecode):
+    return malicious_contracts.insert_one({
+        "addr": addr,
+        "source_code": source_code,
+        "abi": abi,
+        "bytecode": bytecode,
+    })

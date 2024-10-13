@@ -3,8 +3,8 @@ from typing import Annotated
 from typing_extensions import TypedDict
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
-from api.agents.lc_tools import deploy_malicious_contract_tool, get_uploaded_abi_tool, get_uploaded_source_code_tool, send_txn_tool, trigger_reentrancy_attack_tool
-from api.agents.llms import create_gpt_4, create_wrn
+from api.agents.lc_tools import deploy_malicious_contract_tool, generate_smart_contract_tool, get_uploaded_abi_tool, get_uploaded_source_code_tool, send_transaction_to_malicious_contract_tool, send_transaction_tool, trigger_reentrancy_attack_tool
+from api.agents.llms import create_claude, create_gpt_4, create_wrn
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Annotated, Sequence, TypedDict
@@ -78,34 +78,46 @@ def router(state):
 
 
 def create_graph():
-    planner_tools = [get_uploaded_source_code_tool, get_uploaded_abi_tool, deploy_malicious_contract_tool, trigger_reentrancy_attack_tool, send_txn_tool]
-    executor_tools = [send_txn_tool, deploy_malicious_contract_tool, trigger_reentrancy_attack_tool, get_uploaded_source_code_tool, get_uploaded_abi_tool]
-    smart_contract_writer_tools = [
+    planner_tools = [
         get_uploaded_source_code_tool,
         get_uploaded_abi_tool,
+        deploy_malicious_contract_tool,
+        send_transaction_tool,
+        send_transaction_to_malicious_contract_tool
     ]
-    tools = planner_tools + executor_tools + smart_contract_writer_tools
-    wrn = create_wrn()
+    executor_tools = [
+        deploy_malicious_contract_tool,
+        get_uploaded_source_code_tool,
+        get_uploaded_abi_tool,
+        generate_smart_contract_tool,
+        send_transaction_tool,
+        send_transaction_to_malicious_contract_tool
+    ]
+    
+    # Replace the set operation with a list comprehension
+    tools = list({tool.name: tool for tool in planner_tools + executor_tools}.values())
     gpt4 = create_gpt_4()
+    wrn = create_wrn()
+    claude = create_claude()
 
     planner_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=planner_system_prompt)
     executor_agent = create_agent(llm=gpt4, tools=executor_tools, system_message=executor_system_prompt)
-    smart_contract_writer_agent = create_agent(llm=wrn, tools=smart_contract_writer_tools, system_message=smart_contract_writer_system_prompt)
+    # smart_contract_writer_agent = create_agent(llm=wrn, tools=smart_contract_writer_tools, system_message=smart_contract_writer_system_prompt)
     reflector_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=reflector_system_prompt)
     reporter_agent = create_agent(llm=gpt4, tools=planner_tools, system_message=reporter_system_prompt)
 
-    planner_node = functools.partial(agent_node, agent=planner_agent, name="planner")
-    executor_node = functools.partial(agent_node, agent=executor_agent, name="executor")
-    smart_contract_writer_node = functools.partial(agent_node, agent=smart_contract_writer_agent, name="smart_contract_writer")
+    planner_node = functools.partial(agent_node, agent=planner_agent, name="planner", msg_role="ai")
+    executor_node = functools.partial(agent_node, agent=executor_agent, name="executor", msg_role="ai")
+    # smart_contract_writer_node = functools.partial(agent_node, agent=smart_contract_writer_agent, name="smart_contract_writer")
     reflector_node = functools.partial(agent_node, agent=reflector_agent, name="reflector", msg_role="ai")
-    reporter_node = functools.partial(agent_node, agent=reporter_agent, name="reporter")
+    reporter_node = functools.partial(agent_node, agent=reporter_agent, name="reporter", msg_role="ai")
     tools_node = ToolNode(tools=tools)
 
 
     graph_builder = StateGraph(State)
     graph_builder.add_node("planner", planner_node)
     graph_builder.add_node("executor", executor_node)
-    graph_builder.add_node("smart_contract_writer", smart_contract_writer_node)
+    # graph_builder.add_node("smart_contract_writer", smart_contract_writer_node)
     graph_builder.add_node("reflector", reflector_node)
     graph_builder.add_node("reporter", reporter_node)
     graph_builder.add_node('call_tool', tools_node)
@@ -121,15 +133,15 @@ def create_graph():
         router,
         {"continue": "reflector", "call_tool": "call_tool", END: "reporter"},
     )
-    graph_builder.add_conditional_edges(
-        "smart_contract_writer",
-        router,
-        {"continue": "reflector", "call_tool": "call_tool", END: END},
-    )
+    # graph_builder.add_conditional_edges(
+    #     "smart_contract_writer",
+    #     router,
+    #     {"continue": "executor", "call_tool": "call_tool", END: END},
+    # )
     graph_builder.add_conditional_edges(
         "reflector",
         router,
-        {"continue": "executor", "call_tool": "call_tool", END: "reporter"},
+        {"continue": "planner", "call_tool": "call_tool", END: "reporter"},
     )
     graph_builder.add_conditional_edges(
         "reporter",
@@ -147,7 +159,7 @@ def create_graph():
         {
             "planner": "planner",
             "executor": "executor",
-            "smart_contract_writer": "smart_contract_writer",
+            # "smart_contract_writer": "smart_contract_writer",
             "reflector": "reflector",
         },
     )
@@ -159,7 +171,7 @@ def create_graph():
 def run(graph):
     addr = "0x8d4255bf30Ad54BAdcc672fAE977b9D3f15C3f18, 0xBf7446A56F00f88FF72A7C57Db945EE2132F421d, 0xD1A5c53E7F930248083597Ba88C84c1b087ED89e"
     user_input = f"Create a plan to find problems in this smart contract at these addresses: {addr}"
-    config = {"configurable": {"thread_id": "1"}}
+    config = {"configurable": {"thread_id": "3"}, "recursion_limit": 100}
     # The config is the **second positional argument** to stream() or invoke()!
     events = graph.stream({"messages": [HumanMessage(content=user_input)]}, config, stream_mode="values")
     for event in events:
