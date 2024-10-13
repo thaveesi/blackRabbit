@@ -9,9 +9,11 @@ from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMe
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Annotated, Sequence, TypedDict
 import operator
-from api.agents.constants import planner_system_prompt, executor_system_prompt, smart_contract_writer_system_prompt, reflector_system_prompt, reporter_system_prompt
+from api.agents.constants import planner_system_prompt, executor_system_prompt, reflector_system_prompt, reporter_system_prompt
 
 from langgraph.prebuilt import ToolNode
+
+from schema import update_report
 
 class State(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
@@ -179,6 +181,14 @@ def run(graph):
             event["messages"][-1].pretty_print()
     
 
+def run_mas_workflow(contract_id, address):
+    graph = create_graph()
+    user_input = f"Create a plan to find problems in this smart contract at this address: {address}"
+    config = {"configurable": {"thread_id": contract_id}, "recursion_limit": 100}
+    events = graph.invoke({"messages": [HumanMessage(content=user_input)]}, config)
+    # Process the results and update the report
+    final_result = events["messages"][-1].content
+    update_report(contract_id, final_result)
 
 if __name__ == "__main__":
     graph = create_graph()

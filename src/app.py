@@ -10,6 +10,8 @@ import json
 from bson import ObjectId  # Import ObjectId
 from api.constants import ETHERSCAN_BASE_URL
 from schema import get_all_reports
+from api.agents.mas import create_graph, run, run_mas_workflow
+from threading import Thread
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -113,14 +115,21 @@ def create_contract():
     new_report = {
         "contract_id": contract_id,
         "contract_name": name,
-        "created_at": right_now
+        "created_at": right_now,
+        "results": "Analysis in progress..."
     }
     db.report.insert_one(new_report)
+
+    # Start the MAS workflow in a background thread
+    Thread(target=run_mas_workflow, args=(contract_id, address)).start()
 
     # Convert ObjectIds to strings before returning
     new_contract = convert_objectid(new_contract)
     
-    return jsonify({"message": "Contract and report created successfully", "contract": new_contract}), 201
+    return jsonify({
+        "message": "Contract created and analysis started",
+        "contract": new_contract
+    }), 201
 
 # Route 4: GET /reports
 @app.route('/reports', methods=['GET'])
@@ -175,13 +184,10 @@ def get_contract_events(contract_id):
     try:
         # Fetch events related to the specific contract_id
         events = list(db.events.find({"smart_contract_id": contract_id}))
-        
         if not events:
             return jsonify({"error": "No events found for the contract"}), 404
-
         # Convert ObjectIds to strings
         events = convert_objectid(events)
-
         return jsonify({"events": events}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

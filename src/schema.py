@@ -109,3 +109,9 @@ def insert_malicious_contract(addr, source_code, abi, bytecode):
         "abi": abi,
         "bytecode": bytecode,
     })
+
+def update_report(contract_id, final_result):
+    reports.update_one(
+        {"contract_id": contract_id},
+        {"$set": {"results": final_result}}
+    )
