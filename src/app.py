@@ -141,12 +141,20 @@ def get_reports():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Get report by contract ID
+
 @app.route('/report/<contract_id>', methods=['GET'])
 def get_report(contract_id):
+    print(contract_id)
     report = db.report.find_one({"contract_id": contract_id})
     if not report:
         return jsonify({"error": "Report not found"}), 404
+    
+    # Convert ObjectIds in the report to strings
+    report = convert_objectid(report)
+    
+    # Return the report data if found
+    return jsonify(report), 200
+    
 
 @app.route('/reports/append/<contract_id>', methods=['POST'])
 def append_results(contract_id):
