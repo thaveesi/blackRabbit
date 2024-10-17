@@ -195,22 +195,14 @@ def run_mas_workflow(contract_id, address):
         # insert into events table
             if 'messages' in event:
                 message = event['messages'][-1]
-                print(message)
-                message.pretty_print()
-                # if not message["name"]:
-                #     agent_name="Unknown"
-                # else:
-                #     agent_name=message["name"]
-                # if isinstance(message, HumanMessage):
-                #     agent_name = ""
                 if isinstance(message, AIMessage):
                     agent_name = message.name
-                    print(agent_name)
+                elif isinstance(message, HumanMessage):
+                    agent_name = "user"
                 else:
-                    agent_name = "unknown"
+                    agent_name = "tool"
                     
                 insert_event(contract_id=contract_id, agent=agent_name, action=message.content)
-                print("Inserted Event")
                 final_result += message.content + "\n"  # Append each message's content
         update_report(contract_id, final_result) 
     except:
